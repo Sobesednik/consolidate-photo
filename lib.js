@@ -1,4 +1,5 @@
 const request = require('request');
+const OAuth = require('oauth');
 
 function req(options) {
     return new Promise((resolve, reject) => {
@@ -65,9 +66,44 @@ function getFbAccessToken(code, appId, secret, redirectUri) {
         });
 }
 
+function createFlickrOAuth(appId, appSecret, redirectUrl) {
+    return new OAuth.OAuth(
+        'https://www.flickr.com/services/oauth/request_token',
+        'https://www.flickr.com/services/oauth/access_token',
+        appId,
+        appSecret,
+        '1.0A',
+        redirectUrl,
+        'HMAC-SHA1'
+    );
+}
+
+function getFlickrAccessToken(appId, appSecret, redirectUrl, token, secret, verifier) {
+    const oauth = createFlickrOAuth(appId, appSecret, redirectUrl);
+    return new Promise((resolve, reject) => {
+        oauth.getOAuthAccessToken(
+            token,
+            secret,
+            verifier,
+            (error, oAuthAccessToken, oAuthAccessTokenSecret, results) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve({
+                    oAuthAccessToken,
+                    oAuthAccessTokenSecret,
+                    results,
+                });
+            }
+        );
+    });
+}
+
 module.exports = {
     req,
     checkOAuthResponse,
     getVkAccessToken,
     getFbAccessToken,
+    createFlickrOAuth,
+    getFlickrAccessToken,
 };

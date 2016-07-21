@@ -1,4 +1,6 @@
 module.exports = {
+    site: 'https://example.com',
+    appSecret: 'some app secret',
     vk: {
         appId: '1234567',
         appSecret: 'vk_app_secret',
