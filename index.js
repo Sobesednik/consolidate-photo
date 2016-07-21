@@ -31,25 +31,25 @@ const FLICKR_REDIRECT_URL = `${SITE_URL}${FLICKR_REDIRECT_PATH}`;
 const template = `<!DOCTYPE html>
 <html>
 <head>
-	<title>Consolidate photos | Sobesednik.media</title>
+    <title>Consolidate photos | Sobesednik.media</title>
 </head>
 <body>
-	<a href="/auth/vk">Login VK</a>
-	<a href="/auth/fb">Login Facebook</a>
-	<a href="/auth/flickr">Login Flickr</a>
+    <a href="/auth/vk">Login VK</a>
+    <a href="/auth/fb">Login Facebook</a>
+    <a href="/auth/flickr">Login Flickr</a>
 </body>
 </html>`;
 
 router.get('/', function *() {
-	this.type = 'text/html';
-	this.body = template;
+    this.type = 'text/html';
+    this.body = template;
 });
 
 router.get('/auth/vk', function *() {
-	const url = `${VK_OAUTH_URL}?client_id=${VK_APP_ID}` +
-				`&redirect_uri=${VK_REDIRECT_URL}` +
-				`&scope=${VK_SCOPE}`;
-	this.redirect(url);
+    const url = `${VK_OAUTH_URL}?client_id=${VK_APP_ID}` +
+                `&redirect_uri=${VK_REDIRECT_URL}` +
+                `&scope=${VK_SCOPE}`;
+    this.redirect(url);
 });
 router.get('/auth/fb', function *() {
     const url = `${FB_OAUTH_URL}?client_id=${FB_APP_ID}` +
@@ -78,7 +78,7 @@ router.get('/auth/flickr', function *() {
 });
 
 router.get(VK_REDIRECT_PATH, lib.checkOAuthResponse, function *() {
-	const res = yield lib.getVkAccessToken(
+    const res = yield lib.getVkAccessToken(
         this.request.query.code,
         VK_APP_ID,
         VK_APP_SECRET,

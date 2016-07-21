@@ -22,8 +22,8 @@ function *checkOAuthResponse (next) {
         throw new Error(this.request.query.error_description);
     }
     if (!('code' in this.request.query)) {
-		throw new Error('Code is not available');
-	}
+        throw new Error('Code is not available');
+    }
     yield next;
 }
 
@@ -40,7 +40,7 @@ function getOAuthAccessToken(url, code, clientId, secret, redirectUri) {
 }
 
 function getVkAccessToken(code, appId, secret, redirectUri) {
-	return getOAuthAccessToken('https://oauth.vk.com/access_token', code, appId,
+    return getOAuthAccessToken('https://oauth.vk.com/access_token', code, appId,
                               secret, redirectUri)
         .then((res) => {
             const result = JSON.parse(res);
