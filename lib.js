@@ -27,15 +27,20 @@ function *checkOAuthResponse (next) {
     yield next;
 }
 
-function getOAuthAccessToken(url, code, clientId, secret, redirectUri) {
+function getOAuthAccessToken(url, code, clientId, secret, redirectUri, grantType, usePost) {
+    const qs = {
+        code,
+        client_id: clientId,
+        client_secret: secret,
+        redirect_uri: redirectUri,
+    };
+    if (grantType) {
+        qs.grant_type = 'authorization_code';
+    }
     return req({
         url,
-        qs: {
-            code,
-            client_id: clientId,
-            client_secret: secret,
-            redirect_uri: redirectUri,
-        },
+        qs,
+        method: usePost ? 'POST' : 'GET',
     });
 }
 
@@ -59,6 +64,20 @@ function getFbAccessToken(code, appId, secret, redirectUri) {
             const result = JSON.parse(res);
             if ('error' in result) {
                 throw new Error(result.error.message);
+            }
+            if ('access_token' in result) {
+                return result;
+            }
+        });
+}
+
+function getGoogleAccessToken(code, appId, secret, redirectUri) {
+    return getOAuthAccessToken('https://www.googleapis.com/oauth2/v4/token', code, appId,
+                              secret, redirectUri, true, true)
+        .then((res) => {
+            const result = JSON.parse(res);
+            if ('error' in result) {
+                throw new Error(result.error_description);
             }
             if ('access_token' in result) {
                 return result;
@@ -106,4 +125,5 @@ module.exports = {
     getFbAccessToken,
     createFlickrOAuth,
     getFlickrAccessToken,
+    getGoogleAccessToken,
 };

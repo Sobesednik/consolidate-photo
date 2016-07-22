@@ -12,21 +12,27 @@ const FB_APP_ID = config.fb.appId;
 const FB_APP_SECRET = config.fb.appSecret;
 const FLICKR_APP_ID = config.flickr.appId;
 const FLICKR_APP_SECRET = config.flickr.appSecret;
+const GOOGLE_APP_ID = config.google.appId;
+const GOOGLE_APP_SECRET = config.google.appSecret;
 
 const VK_OAUTH_URL = 'https://oauth.vk.com/authorize';
 const FB_OAUTH_URL = 'https://www.facebook.com/dialog/oauth';
 const FLICKR_OAUTH_URL = 'https://www.flickr.com/services/oauth/request_token';
+const GOOGLE_OAUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 
 const VK_REDIRECT_PATH = '/auth/vk/redirect';
 const FB_REDIRECT_PATH = '/auth/fb/redirect';
 const FLICKR_REDIRECT_PATH = '/auth/flickr/redirect';
+const GOOGLE_REDIRECT_PATH = '/auth/google/redirect';
 
 const VK_SCOPE = 'photos';
 const FB_SCOPE = 'user_photos';
+const GOOGLE_SCOPE = 'profile https://picasaweb.google.com/data/';
 
 const VK_REDIRECT_URL = `${SITE_URL}${VK_REDIRECT_PATH}`;
 const FB_REDIRECT_URL = `${SITE_URL}${FB_REDIRECT_PATH}`;
 const FLICKR_REDIRECT_URL = `${SITE_URL}${FLICKR_REDIRECT_PATH}`;
+const GOOGLE_REDIRECT_URL = `${SITE_URL}${GOOGLE_REDIRECT_PATH}`;
 
 const template = `<!DOCTYPE html>
 <html>
@@ -37,6 +43,7 @@ const template = `<!DOCTYPE html>
     <a href="/auth/vk">Login VK</a>
     <a href="/auth/fb">Login Facebook</a>
     <a href="/auth/flickr">Login Flickr</a>
+    <a href="/auth/google">Login Google</a>
 </body>
 </html>`;
 
@@ -55,6 +62,14 @@ router.get('/auth/fb', function *() {
     const url = `${FB_OAUTH_URL}?client_id=${FB_APP_ID}` +
                 `&redirect_uri=${FB_REDIRECT_URL}` +
                 `&scope=${FB_SCOPE}`;
+    this.redirect(url);
+});
+
+router.get('/auth/google/', function *() {
+    const url = `${GOOGLE_OAUTH_URL}?client_id=${GOOGLE_APP_ID}` +
+                `&redirect_uri=${GOOGLE_REDIRECT_URL}` +
+                `&scope=${GOOGLE_SCOPE}` +
+                '&response_type=code';
     this.redirect(url);
 });
 
@@ -93,6 +108,16 @@ router.get(FB_REDIRECT_PATH, lib.checkOAuthResponse, function *() {
         FB_APP_ID,
         FB_APP_SECRET,
         FB_REDIRECT_URL
+    );
+    console.log(res);
+});
+
+router.get(GOOGLE_REDIRECT_PATH, lib.checkOAuthResponse, function *() {
+    const res = yield lib.getGoogleAccessToken(
+        this.request.query.code,
+        GOOGLE_APP_ID,
+        GOOGLE_APP_SECRET,
+        GOOGLE_REDIRECT_URL
     );
     console.log(res);
 });
