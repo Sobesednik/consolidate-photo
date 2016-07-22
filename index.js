@@ -15,16 +15,18 @@ const FLICKR_APP_ID = config.flickr.appId;
 const FLICKR_APP_SECRET = config.flickr.appSecret;
 const GOOGLE_APP_ID = config.google.appId;
 const GOOGLE_APP_SECRET = config.google.appSecret;
+const PX500_APP_ID = config['500px'].appId;
+const PX500_APP_SECRET = config['500px'].appSecret;
 
 const VK_OAUTH_URL = 'https://oauth.vk.com/authorize';
 const FB_OAUTH_URL = 'https://www.facebook.com/dialog/oauth';
-const FLICKR_OAUTH_URL = 'https://www.flickr.com/services/oauth/request_token';
 const GOOGLE_OAUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 
 const VK_REDIRECT_PATH = '/auth/vk/redirect';
 const FB_REDIRECT_PATH = '/auth/fb/redirect';
 const FLICKR_REDIRECT_PATH = '/auth/flickr/redirect';
 const GOOGLE_REDIRECT_PATH = '/auth/google/redirect';
+const PX500_REDIRECT_PATH = '/auth/500px/redirect';
 
 const VK_SCOPE = 'photos';
 const FB_SCOPE = 'user_photos';
@@ -34,6 +36,7 @@ const VK_REDIRECT_URL = `${SITE_URL}${VK_REDIRECT_PATH}`;
 const FB_REDIRECT_URL = `${SITE_URL}${FB_REDIRECT_PATH}`;
 const FLICKR_REDIRECT_URL = `${SITE_URL}${FLICKR_REDIRECT_PATH}`;
 const GOOGLE_REDIRECT_URL = `${SITE_URL}${GOOGLE_REDIRECT_PATH}`;
+const PX500_REDIRECT_URL = `${SITE_URL}${PX500_REDIRECT_PATH}`;
 
 router.get('/', function *() {
     yield this.render('index');
@@ -45,6 +48,7 @@ router.get('/auth/vk', function *() {
                 `&scope=${VK_SCOPE}`;
     this.redirect(url);
 });
+
 router.get('/auth/fb', function *() {
     const url = `${FB_OAUTH_URL}?client_id=${FB_APP_ID}` +
                 `&redirect_uri=${FB_REDIRECT_URL}` +
@@ -52,7 +56,7 @@ router.get('/auth/fb', function *() {
     this.redirect(url);
 });
 
-router.get('/auth/google/', function *() {
+router.get('/auth/google', function *() {
     const url = `${GOOGLE_OAUTH_URL}?client_id=${GOOGLE_APP_ID}` +
                 `&redirect_uri=${GOOGLE_REDIRECT_URL}` +
                 `&scope=${GOOGLE_SCOPE}` +
@@ -63,9 +67,9 @@ router.get('/auth/google/', function *() {
 router.get('/auth/flickr', function *() {
     const oauth = lib.createFlickrOAuth(FLICKR_APP_ID, FLICKR_APP_SECRET, FLICKR_REDIRECT_URL);
     const res = yield new Promise((resolve, reject) => {
-        oauth.getOAuthRequestToken(function (error, oAuthToken, oAuthTokenSecret, results) {
+        oauth.getOAuthRequestToken((error, oAuthToken, oAuthTokenSecret, results) => {
             if (error) {
-                return reject(error);
+                return reject(new Error(error.data));
             }
             return resolve({
                 oAuthToken,
@@ -77,6 +81,26 @@ router.get('/auth/flickr', function *() {
     const url = `https://www.flickr.com/services/oauth/authorize?oauth_token=${res.oAuthToken}`;
     this.session.flickrOAuthTokenSecret = res.oAuthTokenSecret;
     this.redirect(url);
+});
+
+router.get('/auth/500px', function *() {
+    const oauth = lib.create500pxOAuth(PX500_APP_ID, PX500_APP_SECRET, PX500_REDIRECT_URL);
+    const res = yield new Promise((resolve, reject) => {
+        oauth.getOAuthRequestToken((error, oAuthToken, oAuthTokenSecret, results) => {
+            if (error) {
+                return reject(new Error(error.data));
+            }
+            return resolve({
+                oAuthToken,
+                oAuthTokenSecret,
+                results,
+            });
+        });
+    });
+    const url = `https://api.500px.com/v1/oauth/authorize?oauth_token=${res.oAuthToken}`;
+    this.session['500pxOAuthTokenSecret'] = res.oAuthTokenSecret;
+    this.redirect(url);
+    console.log(res);
 });
 
 router.get(VK_REDIRECT_PATH, lib.checkOAuthResponse, function *() {
@@ -122,6 +146,25 @@ router.get(FLICKR_REDIRECT_PATH, function *() {
         FLICKR_REDIRECT_URL,
         this.request.query.oauth_token,
         this.session.flickrOAuthTokenSecret,
+        this.request.query.oauth_verifier
+    );
+    console.log(res);
+});
+
+
+router.get(PX500_REDIRECT_PATH, function *() {
+    if (!('oauth_token' in this.request.query && 'oauth_verifier' in this.request.query)) {
+        throw new Error('No oauth token and/or verifier');
+    }
+    if (!('500pxOAuthTokenSecret' in this.session)) {
+        throw new Error('No OAuth token secret in session');
+    }
+    const res = yield lib.get500pxAccessToken(
+        PX500_APP_ID,
+        PX500_APP_SECRET,
+        PX500_REDIRECT_URL,
+        this.request.query.oauth_token,
+        this.session['500pxOAuthTokenSecret'],
         this.request.query.oauth_verifier
     );
     console.log(res);

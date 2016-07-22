@@ -95,6 +95,18 @@ function createFlickrOAuth(appId, appSecret, redirectUrl) {
     );
 }
 
+function create500pxOAuth(appId, appSecret, redirectUrl) {
+    return new OAuth.OAuth(
+        'https://api.500px.com/v1/oauth/request_token',
+        'https://api.500px.com/v1/oauth/access_token',
+        appId,
+        appSecret,
+        '1.0',
+        redirectUrl,
+        'HMAC-SHA1'
+    );
+}
+
 function getFlickrAccessToken(appId, appSecret, redirectUrl, token, secret, verifier) {
     const oauth = createFlickrOAuth(appId, appSecret, redirectUrl);
     return new Promise((resolve, reject) => {
@@ -104,7 +116,29 @@ function getFlickrAccessToken(appId, appSecret, redirectUrl, token, secret, veri
             verifier,
             (error, oAuthAccessToken, oAuthAccessTokenSecret, results) => {
                 if (error) {
-                    return reject(error);
+                    return reject(new Error(error.data));
+                }
+                return resolve({
+                    oAuthAccessToken,
+                    oAuthAccessTokenSecret,
+                    results,
+                });
+            }
+        );
+    });
+}
+
+
+function get500pxAccessToken(appId, appSecret, redirectUrl, token, secret, verifier) {
+    const oauth = create500pxOAuth(appId, appSecret, redirectUrl);
+    return new Promise((resolve, reject) => {
+        oauth.getOAuthAccessToken(
+            token,
+            secret,
+            verifier,
+            (error, oAuthAccessToken, oAuthAccessTokenSecret, results) => {
+                if (error) {
+                    return reject(new Error(error.data));
                 }
                 return resolve({
                     oAuthAccessToken,
@@ -122,6 +156,8 @@ module.exports = {
     getVkAccessToken,
     getFbAccessToken,
     createFlickrOAuth,
+    create500pxOAuth,
     getFlickrAccessToken,
     getGoogleAccessToken,
+    get500pxAccessToken,
 };
